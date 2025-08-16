@@ -7,6 +7,7 @@ const accountSchema = z.object({
 	name: z.string().min(1),
 	broker: z.enum(["ALPACA","TRADIER","IBKR","ROBINHOOD","SCHWAB","FIDELITY","OTHER","MANUAL"]),
 	connectionType: z.enum(["MANUAL","CSV","API","OAUTH"]),
+	accountType: z.enum(["MARGIN","TRADITIONAL","ROTH","OTHER"]).default("OTHER"),
 	credential: z.record(z.string(), z.string()).optional(),
 });
 
@@ -23,9 +24,9 @@ export async function POST(req: NextRequest) {
 	if (!parsed.success) {
 		return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 	}
-	const { name, broker, connectionType, credential } = parsed.data;
+	const { name, broker, connectionType, accountType, credential } = parsed.data;
 	const account = await prisma.account.create({
-		data: { name, broker, connectionType },
+		data: { name, broker, connectionType, accountType },
 	});
 	if (credential) {
 		const encryptedData = await encryptJson(credential);

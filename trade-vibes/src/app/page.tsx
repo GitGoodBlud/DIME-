@@ -13,7 +13,7 @@ export default function Home() {
 	const [from, setFrom] = useState<string>(() => {
 		const now = new Date();
 		const start = new Date(now);
-		start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // Monday
+		start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
 		return isoDate(start);
 	});
 	const [to, setTo] = useState<string>(() => {
@@ -24,16 +24,20 @@ export default function Home() {
 	});
 	const [weekly, setWeekly] = useState<Weekly | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [useLive, setUseLive] = useState(false);
+	const [accountId, setAccountId] = useState("");
 
-	useEffect(() => {
-		(async () => {
-			setLoading(true);
-			const res = await fetch(`/api/mock/weekly?from=${from}&to=${to}`);
-			const data = await res.json();
-			setWeekly(data);
-			setLoading(false);
-		})();
-	}, [from, to]);
+	async function load() {
+		setLoading(true);
+		const endpoint = useLive ? "/api/live/weekly" : "/api/mock/weekly";
+		const url = `${endpoint}?from=${from}&to=${to}${useLive && accountId ? `&accountId=${accountId}` : ""}`;
+		const res = await fetch(url, { cache: "no-store" });
+		const data = await res.json();
+		setWeekly(data);
+		setLoading(false);
+	}
+
+	useEffect(() => { load(); }, [from, to, useLive]);
 
 	const topTickerData = useMemo(() => weekly?.topTickers?.map(t => ({ name: t.ticker, pl: t.realizedPL })) || [], [weekly]);
 	const premiumByAccount = useMemo(() => weekly?.accounts?.map(a => ({ name: a.account.name, value: a.premiumCollected })) || [], [weekly]);
@@ -56,6 +60,16 @@ export default function Home() {
 		]));
 	}, [weekly]);
 
+	async function refreshApi() {
+		await load();
+	}
+
+	async function syncAccount() {
+		if (!accountId) return;
+		await fetch("/api/sync", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ accountId }) });
+		await load();
+	}
+
 	return (
 		<div className="min-h-screen p-6 max-w-7xl mx-auto space-y-6">
 			<h1 className="text-2xl font-semibold">Trade Vibes</h1>
@@ -65,8 +79,14 @@ export default function Home() {
 				<input type="date" className="border rounded px-2 py-1" value={from} onChange={(e) => setFrom(e.target.value)} />
 				<label className="text-sm">To</label>
 				<input type="date" className="border rounded px-2 py-1" value={to} onChange={(e) => setTo(e.target.value)} />
-				<button className="border rounded px-3 py-1" onClick={() => setTo(isoDate(new Date(new Date(from).getTime() + 6*24*3600*1000)))}>This Week</button>
-				<a className="border rounded px-3 py-1" href={`/api/mock/weekly/csv?from=${from}&to=${to}`}>Download CSV</a>
+				<label className="text-sm flex items-center gap-1">
+					<input type="checkbox" checked={useLive} onChange={(e) => setUseLive(e.target.checked)} /> Use Live Data
+				</label>
+				<input placeholder="Account ID (optional)" className="border rounded px-2 py-1" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
+				<button className="border rounded px-3 py-1" onClick={refreshApi}>Refresh</button>
+				<button className="border rounded px-3 py-1" onClick={syncAccount} disabled={!accountId}>Sync</button>
+				<a className="border rounded px-3 py-1" href={`${useLive?"/api/mock/weekly/csv":"/api/mock/weekly/csv"}?from=${from}&to=${to}`}>Download CSV</a>
+				<a className="border rounded px-3 py-1" href="/setup">Setup Accounts</a>
 			</div>
 
 			{loading && <p>Loading…</p>}

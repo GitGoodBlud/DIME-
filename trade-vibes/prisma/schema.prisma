@@ -1,0 +1,160 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum AssetType {
+  EQUITY
+  OPTION
+  CASH
+  OTHER
+}
+
+enum OptionType {
+  CALL
+  PUT
+}
+
+enum TransactionSide {
+  BUY
+  SELL
+  SELL_TO_OPEN
+  BUY_TO_CLOSE
+  ASSIGNMENT
+  EXERCISE
+  EXPIRATION
+  DIVIDEND
+  INTEREST
+  TRANSFER
+}
+
+enum Broker {
+  ALPACA
+  TRADIER
+  IBKR
+  ROBINHOOD
+  SCHWAB
+  FIDELITY
+  OTHER
+  MANUAL
+}
+
+enum ConnectionType {
+  MANUAL
+  CSV
+  API
+  OAUTH
+}
+
+enum AccountType {
+  MARGIN
+  TRADITIONAL
+  ROTH
+  OTHER
+}
+
+model Account {
+  id             String           @id @default(cuid())
+  name           String
+  broker         Broker
+  connectionType ConnectionType
+  accountType    AccountType      @default(OTHER)
+  createdAt      DateTime         @default(now())
+
+  portfolios     Portfolio[]
+  credential     ApiCredential?
+}
+
+model Portfolio {
+  id           String       @id @default(cuid())
+  accountId    String
+  name         String
+  type         String?
+  baseCurrency String       @default("USD")
+  createdAt    DateTime     @default(now())
+
+  account      Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  positions    Position[]
+  transactions Transaction[]
+  snapshots    Snapshot[]
+
+  @@index([accountId])
+}
+
+model Position {
+  id               String      @id @default(cuid())
+  portfolioId      String
+  symbol           String
+  assetType        AssetType
+  quantity         Decimal
+  averageCost      Decimal
+  underlyingSymbol String?
+  expirationDate   DateTime?
+  strike           Decimal?
+  optionType       OptionType?
+  openedAt         DateTime?
+  closedAt         DateTime?
+
+  portfolio        Portfolio   @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@index([portfolioId])
+  @@index([symbol])
+}
+
+model Transaction {
+  id               String          @id @default(cuid())
+  portfolioId      String
+  occurredAt       DateTime
+  symbol           String
+  assetType        AssetType
+  side             TransactionSide
+  quantity         Decimal
+  price            Decimal
+  fees             Decimal         @default(0)
+  underlyingSymbol String?
+  expirationDate   DateTime?
+  strike           Decimal?
+  optionType       OptionType?
+  multiplier       Decimal         @default(100)
+  orderId          String?
+  notes            String?
+
+  portfolio        Portfolio       @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@index([portfolioId])
+  @@index([symbol])
+  @@index([occurredAt])
+}
+
+model Snapshot {
+  id          String    @id @default(cuid())
+  portfolioId String
+  asOf        DateTime
+  cash        Decimal
+  marketValue Decimal
+  totalEquity Decimal
+
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, asOf])
+  @@index([portfolioId])
+}
+
+model ApiCredential {
+  id            String   @id @default(cuid())
+  accountId     String   @unique
+  provider      String
+  encryptedData String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  account       Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}

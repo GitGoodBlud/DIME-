@@ -1,0 +1,33 @@
+{
+	"weekLabel": "2025-08-11 – 2025-08-17",
+	"totals": {
+		"premiumCollected": 275,
+		"realizedPL": 400,
+		"winRatePct": 66.7,
+		"avgYieldPct": 0.95,
+		"rocPct": 0.8,
+		"wowChangePct": 12.3,
+		"contractsExpiring": 3,
+		"tradesClosed": 6
+	},
+	"accounts": [
+		{ "account": { "id": "acct-margin", "name": "RH Margin", "type": "MARGIN" }, "premiumCollected": 150, "realizedPL": 180, "capitalUtilization": 0.42, "trades": [] },
+		{ "account": { "id": "acct-roth", "name": "RH Roth", "type": "ROTH" }, "premiumCollected": 75, "realizedPL": 120, "capitalUtilization": 0.35, "trades": [] },
+		{ "account": { "id": "acct-trad", "name": "RH Traditional", "type": "TRADITIONAL" }, "premiumCollected": 50, "realizedPL": 100, "capitalUtilization": 0.28, "trades": [] }
+	],
+	"topTickers": [
+		{ "ticker": "AAPL", "realizedPL": 120, "rocPct": 0.9, "collectionRatePct": 60 },
+		{ "ticker": "TSLA", "realizedPL": 160, "rocPct": 1.1, "collectionRatePct": 70 },
+		{ "ticker": "MSFT", "realizedPL": 80, "rocPct": 0.5, "collectionRatePct": 40 }
+	],
+	"strategyBreakdown": [
+		{ "strategy": "CSP", "realizedPL": 210, "premium": 180, "rocPct": 1.0 },
+		{ "strategy": "CC", "realizedPL": 190, "premium": 95, "rocPct": 0.6 }
+	],
+	"closeMethodBreakdown": [
+		{ "method": "Called Away", "count": 1 },
+		{ "method": "Expired Worthless", "count": 2 },
+		{ "method": "Assigned", "count": 1 },
+		{ "method": "Bought Back", "count": 2 }
+	]
+}

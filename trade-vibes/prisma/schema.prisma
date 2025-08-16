@@ -54,11 +54,19 @@ enum ConnectionType {
   OAUTH
 }
 
+enum AccountType {
+  MARGIN
+  TRADITIONAL
+  ROTH
+  OTHER
+}
+
 model Account {
   id             String           @id @default(cuid())
   name           String
   broker         Broker
   connectionType ConnectionType
+  accountType    AccountType      @default(OTHER)
   createdAt      DateTime         @default(now())
 
   portfolios     Portfolio[]
